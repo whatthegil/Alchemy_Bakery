@@ -1,71 +1,36 @@
 <?php
 session_start();
+include 'db_connection.php';
 
-// Database configuration
-$host = 'localhost';
-$username = 'root';
-$password = '';
-$database = 'alchemy_bakery';
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = $_POST['username'];
+    $password = $_POST['password'];
 
-// Create connection
-$conn = new mysqli($host, $username, $password, $database);
+    if(!empty($email) && !empty($password)&& !is_numeric($email)) {
+        $query = "SELECT * FROM users WHERE email = '$email'";
+        
+        if($result = mysqli_query($conn, $query)){
+            if($result && mysqli_num_rows($result) > 0){
+                $user_data = mysqli_fetch_assoc($result);
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Initialize cart if not set
-if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
-}
-
-// Add to Cart functionality
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
-    $item_id = $_POST['item_id'];
-    $item_name = $_POST['item_name'];
-    $item_price = $_POST['item_price'];
-    $item_quantity = $_POST['item_quantity']; // User-specified quantity
-
-    $item_exists = false;
-
-    foreach ($_SESSION['cart'] as &$item) {
-        if ($item['id'] == $item_id) {
-            $item['quantity'] += $item_quantity;
-            $item_exists = true;
-            break;
+                if($userData['password'] == $password){
+                    header('Location: index.php');
+                    die;
+                }
+            }
         }
+            echo "<script type='text/javascript'>alert('Invalid username or password.')</script>";
     }
-
-    if (!$item_exists) {
-        $_SESSION['cart'][] = [
-            'id' => $item_id,
-            'name' => $item_name,
-            'price' => $item_price,
-            'quantity' => $item_quantity,
-        ];
+    else{
+            echo "<script type='text/javascript'>alert('Please enter a valid username or password.')</script>";
     }
-
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
 }
-
-// Calculate cart count
-$cart_count = 0;
-foreach ($_SESSION['cart'] as $item) {
-    $cart_count += $item['quantity'];
-}
-
-// Fetch categories
-$categories_sql = "SELECT * FROM categories";
-$categories_result = $conn->query($categories_sql);
-
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Menu | Alchemy Bakery</title>
+    <title>Accounts | Alchemy Bakery</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://shopify.com/css/unicons.css" rel="stylesheet">
@@ -169,80 +134,46 @@ $categories_result = $conn->query($categories_sql);
         </div>
     </nav>
 
-    <header class="text-center py-5 bg-danger text-white">
-        <h3 class="text-uppercase">Alchemy Bakery</h3>
-        <h1 class="fg-bold text-white">Our Menu</h1>
-    </header>
+    <main>
+        <section class="login">
+            <div class="form-container">
+                <form action="accounts.php" method="POST">
+                    <h2>LOGIN</h2>
+                    <input type="email"  id="username" name="username" placeholder="Mobile number or email" required>
+                    
+                    <input class="password" type="password" id="password" name="password" placeholder="Password" required>
 
-    <section class="py-5">
-        <div class="container text-center">
-            <div class="row justify-content-center">
-                <div class="col-lg-4 col-md-6 mb-4">
-                <a href="cakes.php">
-                        <img src="images/cakes.png" alt="Cakes" class="img-fluid rounded">
-                    </a>
-                    <h5 class="mt-3">Cakes</h5>
-                </div>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <a href="cake_slice.php">
-                    <img src="images/cake_slice.png" alt="Cake Slice" class="img-fluid rounded">
-                    </a>
-                    <h5 class="mt-3">Cake Slice</h5>
-                </div>
+                    <button type="submit">Login</button>
 
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <a href="rolls.php">
-                    <img src="images/rolls.png" alt="Cake Rolls" class="img-fluid rounded">
-                    </a>
-                    <h5 class="mt-3">Cake Rolls</h5>
-                </div>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
 
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <a href="dedication_cakes.php">
-                    <img src="images/dedication_cakes.png" alt="Dedication Cakes" class="img-fluid rounded">
-                    </a>
-                    <h5 class="mt-3">Dedication Cakes</h5>
-                </div>
+                    <p>Don't have an account? <a href="create-account.html" id="create-account-btn">Create one</a></p>
+                    
+                    <p>Or Sign Up using</p>
 
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <a href="sweet_pastries.php">
-                    <img src="images/sweet_pastries.png" alt="Sweet Pastries" class="img-fluid rounded">
-                    </a>
-                    <h5 class="mt-3">Pastries</h5>
-                </div>
-
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <a href="cookies.php">
-                    <img src="images/cookies.png" alt="Cookies" class="img-fluid rounded">
-                    </a>
-                    <h5 class="mt-3">Cookies</h5>
-                </div>
-
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <a href="empanadas.php">
-                        <img src="images/empanadas.png" alt="Empanadas" class="img-fluid rounded">
-                    </a>
-                    <h5 class="mt-3">Empanadas</h5>
-                </div>
+                    <a href="https://www.facebook.com/login.php?skip_api_login=1&api_key=150722575101290&kid_directed_site=0&app_id=150722575101290&signed_next=1&next=https%3A%2F%2Fwww.facebook.com%2Fv19.0%2Fdialog%2Foauth%3Fclient_id%3D150722575101290%26state%3D%257B%2522_sid%2522%253A%25226f377c36-c76a-1f69-0d34-a993941f0c32%2522%257D%26response_type%3Dcode%26sdk%3Dphp-sdk-5.7.0%26redirect_uri%3Dhttps%253A%252F%252Fapp.growave.io%252Flite2%252Fauth%252Ffcallback%26scope%3Demail%252Cpublic_profile%26ret%3Dlogin%26fbapp_pres%3D0%26logger_id%3D0cf9a3d9-104f-4fc4-a5b8-1753cbe58377%26tp%3Dunspecified&cancel_url=https%3A%2F%2Fapp.growave.io%2Flite2%2Fauth%2Ffcallback%3Ferror%3Daccess_denied%26error_code%3D200%26error_description%3DPermissions%2Berror%26error_reason%3Duser_denied%26state%3D%257B%2522_sid%2522%253A%25226f377c36-c76a-1f69-0d34-a993941f0c32%2522%257D%23_%3D_&display=page&locale=en_US&pl_dbl=0" class="facebook-button">
+                    Facebook</a>
+                    <a href="https://accounts.google.com/o/oauth2/auth/oauthchooseaccount?response_type=code&access_type=offline&client_id=766683587460-nit6r0u35r0v9d3r1ft5uika3v22q5fi.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fapp.growave.io%2Flite2%2Fauth%2Fgconnect&state=%7B%22_sid%22%3A%226f377c36-c76a-1f69-0d34-a993941f0c32%22%2C%22shop%22%3A%22https%3A%5C%2F%5C%2Fthe-cakery-hk.myshopify.com%22%7D&scope=profile%20openid%20email&approval_prompt=force&include_granted_scopes=true&service=lso&o2v=1&ddm=1&flowName=GeneralOAuthFlow" class="google-button">
+                    Google</a>
+                </form>
             </div>
-        </div>
-    </section>
-    
+        </section>
+    </main>
+
     <footer class="text-center py-4">
         <div class="container">
           <hr>
             <p>📞 +639281414151 | ✉️ alchemybaker1@gmail.com |📍 Nabua, Camarines Sur | &copy; All Rights Reserved 2024</p>
-          <div class="social-icons">
-              <a href="#"><img src="images/facebook.png" alt="Facebook"></a>
-              <a href="#"><img src="images/instagram-icon.png" alt="Instagram"></a>
-              <a href="#"><img src="images/tiktok_icon.png" alt="TikTok"></a>
-              <a href="#"><img src="images/youtube-icon.png" alt="YouTube"></a>
-          </div>
+            <div class="social-icons">
+                <a href="#"><img src="images/facebook.png" alt="Facebook"></a>
+                <a href="#"><img src="images/instagram-icon.png" alt="Instagram"></a>
+                <a href="#"><img src="images/tiktok_icon.png" alt="TikTok"></a>
+                <a href="#"><img src="images/youtube-icon.png" alt="YouTube"></a>
+            </div>
         </div>
-      </footer>
+    </footer>
 
-      <!-- Bootstrap JS and dependencies -->
-      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
-    </body>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
+</body>
 </html>
